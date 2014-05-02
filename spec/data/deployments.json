@@ -1,0 +1,44 @@
+{
+  "deployments": [
+    {
+      "name": "test-prefix-zensmartfeedpool-a-zookeeper",
+      "members": [
+        {
+          "href": "/api/clouds/3/instances/81UFDJ84L77VP",
+          "type": "Instance",
+          "name": "zookeeper002"
+        },
+        {
+          "href": "/api/clouds/3/instances/CST1BOUCO79MV",
+          "type": "Instance",
+          "name": "zookeeper001"
+        },
+        {
+          "href": "/api/clouds/3/instances/2BMBTLFSR3K7T",
+          "type": "Instance",
+          "name": "zookeeper001"
+        }
+      ]
+    },
+    {
+      "name": "test-prefix-zensmartfeedpool-b-zookeeper",
+      "members": [
+        {
+          "href": "/api/clouds/3/instances/E3F9H5G2M7D05",
+          "type": "Instance",
+          "name": "zookeeper002"
+        }
+      ]
+    },
+    {
+      "name": "test-prefix-zensmartfeedpool-a-zook",
+      "members": [
+        {
+          "href": "/api/clouds/3/instances/18UBA2151G2BQ",
+          "type": "Instance",
+          "name": "zook0023"
+        }
+      ]
+    }
+  ]
+}
