@@ -1,6 +1,6 @@
 # RightApiHelper
 
-TODO: Write a gem description
+A collection of helper objects and methods that encapsulate commonly used idioms for [right_api_client](https://github.com/rightscale/right_api_client) users.
 
 ## Installation
 
@@ -18,15 +18,48 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+
+### Getting a connection
+
+Get started by creating a [right_api_client](https://github.com/rightscale/right_api_client) handle:
+
+    @client = RightApiHelper::Session.new.create_client_from_file("~/.right_api_client/login.yml")
+
+or
+
+    @client = RightApiHelper.create_client_from_file("~/.right_api_client/login.yml")
+
+### Using a helper
+
+Now pass the client handle to a helper object to use it's methods:
+
+    deployment_helper = RightApiHelper::Deployments.new(@client)
+    my_deployment = @deployment_helper.find_or_create("My Cool Deployment")
+
+### Logging
+
+By default the helpers log to STDOUT.  But you can modify that by passing a custom `Logger` to each helper.  Here is the example from above modified to use a custom logger.
+
+    my_logger = Logger.new("/tmp/right_api.log)
+    deployment_helper = RightApiHelper::Deployments.new(client)
+    deployment_helper.logger(my_logger)
+    my_deployment = @deployment_helper.find_or_create("My Cool Deployment")
+
+You can also pass a logger object to the `right_api_client` gem. For example:
+
+    session = RightApiHelper::Session.new
+    session.logger(my_logger)
+    @client = session.create_client_from_file("~/.right_api_client/login.yml")
+
 
 ## TODO
 
-* Need to filter VCR output for `right_api_client_session` cassette to remove creds
+* Need to filter VCR output for `right_api_client_session` cassette to remove creds for mocked unit tests.
+* break `lib/right_api_helper/api15.rb` apart into separate helpers?
 
 ## Contributing
 
-1. Fork it ( https://github.com/[my-github-username]/right_api_helper/fork )
+1. Fork it ( https://github.com/caryp/right_api_helper/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

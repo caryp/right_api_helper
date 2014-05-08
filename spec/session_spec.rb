@@ -17,24 +17,25 @@
 
 require 'spec_helper'
 
-describe RightApiHelper::Instances do
+describe RightApiHelper::Session do
 
-  before(:all) do
-    # Get API session
+  it "creates an client" do
     VCR.use_cassette('right_api_session') do
       session = RightApiHelper::Session.new
       session.should_receive(:setup_client_logging)
-      @right_api_client = session.create_client_from_file("~/.right_api_client/login.yml")
-    end
-    VCR.use_cassette('right_api_general') do
-      @helper = RightApiHelper::Instances.new(@right_api_client)
+      session.logger(double("Logger"))
+      @client = session.create_client("someemail", "somepasswd", "someaccountid", "https://my.rightscale.com")
+      @client.should_not == nil
     end
   end
 
-  it "gets all instances in account" do
-    VCR.use_cassette('right_api_general') do
-      instances = @helper.get_instances
-      instances.should_not == nil
+  it "creates an client from file" do
+    VCR.use_cassette('right_api_session') do
+      session = RightApiHelper::Session.new
+      session.should_receive(:setup_client_logging)
+      session.logger(double("Logger"))
+      @client = session.create_client_from_file("~/.right_api_client/login.yml")
+      @client.should_not == nil
     end
   end
 

@@ -1,3 +1,20 @@
+#
+# Author: cary@rightscale.com
+# Copyright 2014 RightScale, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 require 'json'
 require 'right_api_client'
 require 'right_api_helper'
@@ -7,102 +24,93 @@ describe "API15 object" do
   BAD_USER_DATA = "RS_server=my.rightscale.com&RS_token=89eeb0b19af40b5b72668dc3caa9934a&RS_sketchy=sketchy1-166.rightscale.com"
 
   before(:each) do
-    @api = RightApiHelper::API15.new()
-    apiStub = double("RightApi::Client")
+    apiStub = double("RightApi::Client", :api_url => "http://foo.com", :log => "")
     RightApi::Client.should_receive(:new).and_return(apiStub)
-    @api.connection("someemail", "somepasswd", "someaccountid", "https://my.rightscale.com")
-  end
-
-  it "create a connection from a config file" do
-    @api = RightApiHelper::API15.new()
-    apiStub = double("RightApi::Client")
-    io_stub = double("IO", :read => "heynow")
-    File.should_receive(:open).and_return(io_stub)
-    RightApi::Client.should_receive(:new).and_return(apiStub)
-    @api.connection_file("/some/bunk/file.yml")
+    @right_api_client = RightApiHelper::Session.new.create_client("someemail", "somepasswd", "someaccountid", "https://my.rightscale.com")
+    @api = RightApiHelper::API15.new(@right_api_client)
   end
 
   it "should find deployment by name" do
     deploymentsStub = double("deployments", :index => [ :name => "my_fake_deployment" ])
-    @api.instance_variable_get("@connection").should_receive(:deployments).and_return(deploymentsStub)
+    @api.instance_variable_get("@client").should_receive(:deployments).and_return(deploymentsStub)
     @api.find_deployment_by_name("my_fake_deployment")
   end
 
   it "should raise error if deployment not found by name" do
     deploymentsStub = double("deployments", :index => nil)
-    @api.instance_variable_get("@connection").should_receive(:deployments).and_return(deploymentsStub)
+    @api.instance_variable_get("@client").should_receive(:deployments).and_return(deploymentsStub)
     lambda{@api.find_deployment_by_name("my_fake_deployment")}.should raise_error
   end
 
   it "should raise error if multiple deployments found by name" do
     deploymentsStub = double("deployments", :index => [ {:name => "my_fake_deployment"}, {:name => "my_fake_deployment2"} ])
-    @api.instance_variable_get("@connection").should_receive(:deployments).and_return(deploymentsStub)
+    @api.instance_variable_get("@client").should_receive(:deployments).and_return(deploymentsStub)
     lambda{@api.find_deployment_by_name("my_fake_deployment")}.should raise_error
   end
 
   it "should find server by name" do
     serversStub = double("servers", :index => [ :name => "my_fake_server" ])
-    @api.instance_variable_get("@connection").should_receive(:servers).and_return(serversStub)
+    @api.instance_variable_get("@client").should_receive(:servers).and_return(serversStub)
     @api.find_server_by_name("my_fake_server")
   end
 
   it "should raise error if multiple servers found by name" do
     serversStub = double("servers", :index => [ {:name => "my_fake_server"}, {:name => "my_fake_server2"} ])
-    @api.instance_variable_get("@connection").should_receive(:servers).and_return(serversStub)
+    @api.instance_variable_get("@client").should_receive(:servers).and_return(serversStub)
     lambda{@api.find_server_by_name("my_fake_server")}.should raise_error
   end
 
   it "should find cloud by name" do
     cloudsStub = double("clouds", :index => [ :name => "my_fake_cloud" ])
-    @api.instance_variable_get("@connection").should_receive(:clouds).and_return(cloudsStub)
+    @api.instance_variable_get("@client").should_receive(:clouds).and_return(cloudsStub)
     @api.find_cloud_by_name("my_fake_cloud")
   end
 
   it "should raise error if cloud not found by name" do
     cloudsStub = double("clouds", :index => nil)
-    @api.instance_variable_get("@connection").should_receive(:clouds).and_return(cloudsStub)
+    @api.instance_variable_get("@client").should_receive(:clouds).and_return(cloudsStub)
     lambda{@api.find_cloud_by_name("my_fake_cloud")}.should raise_error
   end
 
   it "should find MCI by name" do
     mcisStub = double("multi_cloud_images", :index => [ :name => "my_fake_mci" ])
-    @api.instance_variable_get("@connection").should_receive(:multi_cloud_images).and_return(mcisStub)
+    @api.instance_variable_get("@client").should_receive(:multi_cloud_images).and_return(mcisStub)
     @api.find_mci_by_name("my_fake_mci")
   end
 
   it "should raise error if multiple MCI found by name" do
     mcisStub = double("multi_cloud_images", :index => [ {:name => "my_fake_mci"}, {:name => "my_fake_mci2"} ])
-    @api.instance_variable_get("@connection").should_receive(:multi_cloud_images).and_return(mcisStub)
+    @api.instance_variable_get("@client").should_receive(:multi_cloud_images).and_return(mcisStub)
     lambda{@api.find_mci_by_name("my_fake_mci")}.should raise_error
   end
 
   it "should find servertemplate by name" do
     servertemplatesStub = double("servertemplates", :index => [ double("servertemplate", :name => "my_fake_servertemplate", :revision => [0, 1, 2, 3, 4 ]) ])
-    @api.instance_variable_get("@connection").should_receive(:server_templates).and_return(servertemplatesStub)
+    @api.instance_variable_get("@client").should_receive(:server_templates).and_return(servertemplatesStub)
     @api.find_servertemplate("my_fake_servertemplate")
   end
 
   it "should raise error if no servertemplates found by name" do
     servertemplatesStub = double("servertemplates", :index => [])
-    @api.instance_variable_get("@connection").should_receive(:server_templates).and_return(servertemplatesStub)
+    @api.instance_variable_get("@client").should_receive(:server_templates).and_return(servertemplatesStub)
     lambda{@api.find_servertemplate("my_fake_servertemplate")}.should raise_error
   end
 
   it "should raise error if multiple servertemplates found by name" do
     servertemplatesStub = double("servertemplates", :index => [ double("servertemplate", :name => "my_fake_servertemplate"), double("servertemplate", :name => "my_fake_servertemplate") ])
-    @api.instance_variable_get("@connection").should_receive(:server_templates).and_return(servertemplatesStub)
+    @api.instance_variable_get("@client").should_receive(:server_templates).and_return(servertemplatesStub)
     lambda{@api.find_servertemplate("my_fake_servertemplate")}.should raise_error
   end
 
   it "should find servertemplate by id" do
     servertemplatesStub = double("servertemplates", :index => [ :name => "my_fake_servertemplate" ])
-    @api.instance_variable_get("@connection").should_receive(:server_templates).and_return(servertemplatesStub)
+    @api.instance_variable_get("@client").should_receive(:server_templates).and_return(servertemplatesStub)
     @api.find_servertemplate(1234)
   end
 
   it "should create deployment" do
     deploymentsStub = double("deployments", :create => [ {:name => "my_fake_deployment"} ])
-    @api.instance_variable_get("@connection").should_receive(:deployments).and_return(deploymentsStub)
+    @api.instance_variable_get("@client").should_receive(:deployments).and_return(deploymentsStub)
     deploymentsStub.should_receive(:create)
     @api.create_deployment("my_deployment")
   end
@@ -130,7 +138,7 @@ describe "API15 object" do
     cloud = @api.find_cloud_by_name(1234)
 
     serversStub = double("servers", :create => [ :name => "my_fake_server" ])
-    @api.instance_variable_get("@connection").should_receive(:servers).and_return(serversStub)
+    @api.instance_variable_get("@client").should_receive(:servers).and_return(serversStub)
     @api.create_server(deployment, server_template, nil, cloud, "my_fake_server")
   end
 
@@ -156,7 +164,7 @@ describe "API15 object" do
     cloud = @api.find_cloud_by_name(1234)
 
     serversStub = double("servers", :create => [ :name => "my_fake_server" ])
-    @api.instance_variable_get("@connection").should_receive(:servers).and_return(serversStub)
+    @api.instance_variable_get("@client").should_receive(:servers).and_return(serversStub)
     @api.create_server(deployment, server_template, mci, cloud, "my_fake_server")
   end
 
@@ -165,7 +173,7 @@ describe "API15 object" do
     serversStub = double("servers", :launch => true, :show => serverStub, :index => [ :name => "my_fake_server" ])
     @api.should_receive(:create_server).and_return(serversStub)
     server = @api.create_server("foo", "bar", "my_fake_server")
-    @api.instance_variable_get("@connection").should_receive(:servers).and_return(serversStub)
+    @api.instance_variable_get("@client").should_receive(:servers).and_return(serversStub)
     @api.launch_server(server, [ {:name => "input1", :value => 1} ])
   end
 
@@ -174,7 +182,7 @@ describe "API15 object" do
     serversStub = double("servers", :launch => true, :show => serverStub, :index => [ :name => "my_fake_server" ])
     @api.should_receive(:create_server).and_return(serversStub)
     server = @api.create_server("foo", "bar", "my_fake_server")
-    @api.instance_variable_get("@connection").should_receive(:servers).and_return(serversStub)
+    @api.instance_variable_get("@client").should_receive(:servers).and_return(serversStub)
     @api.launch_server(server)
   end
 
@@ -190,6 +198,7 @@ describe "API15 object" do
   it "returns data_request_url for instance" do
     @user_data = "RS_rn_url=amqp://b915586461:278a854748@orange2-broker.test.rightscale.com/right_net&RS_rn_id=4985249009&RS_server=orange2-moo.test.rightscale.com&RS_rn_auth=d98106775832c174ffd55bd7b7cb175077574adf&RS_token=b233a57d1d24f27bd8650d0f9b6bfd54&RS_sketchy=sketchy1-145.rightscale.com&RS_rn_host=:0"
     @request_data_url = "https://my.rightscale.com/servers/data_injection_payload/d98106775832c174ffd55bd7b7cb175077574adf"
+    @right_api_client.should_receive(:api_url).and_return("https://my.rightscale.com")
     @api.data_request_url(@user_data).should == @request_data_url
   end
 

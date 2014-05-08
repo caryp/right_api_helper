@@ -15,30 +15,22 @@
 # limitations under the License.
 #
 
-module RightApiHelper
-  class DeploymentsCreator
+require 'right_api_helper'
 
-    def run(argv)
-      if argv.empty? or argv[0].empty?
-        log_error "FATAL: you must supply path to json file"
-        exit -1
-      end
-      filename = ""
-      filename = argv[0] if argv[0]
-      unless File.exists?(filename)
-        log_error "FATAL: no such file: '#{filename}'"
-        exit -2
-      end
+# Use the VCR gem for recording the API request/responses
+# instead of mocking everything like I did in the api15_spec
+require 'vcr'
 
-      @json = File.open(filename, "r") { |f| f.read }
+VCR.configure do |c|
+  c.cassette_library_dir = 'spec/cassettes'
+  c.hook_into :webmock
+  c.configure_rspec_metadata!
+  #c.default_cassette_options = { :record => :all }
+  c.default_cassette_options = { :record => :new_episodes }
+end
 
-    end
-
-    private
-
-    def log_error(message)
-      puts message
-    end
-
-  end
+RSpec.configure do |c|
+  # so we can use :vcr rather than :vcr => true;
+  # in RSpec 3 this will no longer be necessary.
+  c.treat_symbols_as_metadata_keys_with_true_values = true
 end

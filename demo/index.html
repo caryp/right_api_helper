@@ -1,0 +1,83 @@
+<html>
+<style>
+
+body {
+  min-width: 600px;
+  margin:0;
+  padding:0;
+  font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Verdana,lucida,sans-serif;
+  background:#FFF;
+  height:100%
+}
+
+.banner {
+  background:#235186;
+  padding: 10;
+}
+
+.logo {
+  padding: 3 20 10;
+
+  float: left;
+  height:30px;
+}
+
+.bucket_name {
+  padding: 0 20 10;
+
+  font-size: 19px;
+  color: #F5F0A9;
+  background:#235186;
+}
+
+
+.disclaimer {
+  background: #FFFFFF;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  color: black;
+  border: 2px solid black;
+  font-weight: normal;
+  font-size: 14px;
+  padding: 2px 20px;
+  position: relative;
+  clear: both;
+}
+
+.jqtree_common, h1, h2, h3 {
+  color: #235186;
+  background:#F5F2A9;
+  padding: 3;
+  margin: 0;
+  text-indent: 10;
+}
+.jqtree-title {
+  font-size: 16px;
+}
+
+
+
+</style>
+<head>
+  <title>jQuery test</title>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+  <script src="tree.jquery.js"></script>
+
+  <script type="text/javascript">
+  $(function() {
+    $.getJSON(
+      'deployments.json',
+      function(result) {
+        $('#tree1').tree({ data: result.deployments });
+      });
+  });
+  </script>
+</head>
+  <div class='banner'>
+  <div class='logo'><img alt='Embedded Image' width='140' height='19' src='logo.png' /></div>
+  <div class='bucket_name'>Instance Organize Preview</div>
+
+  </div>
+  <div id="tree1" data-url="."></div>
+</html>

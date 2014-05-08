@@ -1,7 +1,6 @@
 #
-# Author:: Cary Penniman (<cary@rightscale.com>)
-# Copyright:: Copyright (c) 2013 RightScale, Inc.
-# License:: Apache License, Version 2.0
+# Author: cary@rightscale.com
+# Copyright 2014 RightScale, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,46 +15,11 @@
 # limitations under the License.
 #
 
+# This contains a bunch or random helper shims
+# Probably should be broken out into separate classes
+#
 module RightApiHelper
-  class API15
-
-    attr_reader :client
-
-    def initialize
-      require "right_api_client"
-      require "yaml"
-    end
-
-    def connection(email, password, account_id, api_url = nil)
-      begin
-        args = { :email => email, :password => password, :account_id => account_id }
-        @url = api_url
-        args[:api_url] = @url if @url
-        @connection ||= RightApi::Client.new(args)
-        #@logger = Logger.new(STDOUT)
-        #@logger.level = Logger::DEBUG
-        #@connection.log(@logger)
-        @client = @connection
-      rescue Exception => e
-        args.delete(:password) # don't log password
-        puts "ERROR: could not connect to RightScale API.  Params: #{args.inspect}"
-        puts e.message
-        puts e.backtrace
-        raise e
-      end
-    end
-
-    def connection_file(filename)
-      begin
-        @connection ||= RightApi::Client.new(YAML.load_file(File.expand_path(filename, __FILE__)))
-        @client = @connection
-      rescue Exception => e
-        puts "ERROR: could not connect to RightScale API.  filename: '#{filename}'"
-        puts e.message
-        puts e.backtrace
-        raise e
-      end
-    end
+  class API15 < Base
 
     # If the cloud reports ssh keys, then we assume it requires them to launch
     # servers.
@@ -109,7 +73,7 @@ module RightApiHelper
       raise "ERROR: user data token not found. " +
             "Does your MCI have a provides:rs_agent_type=right_link tag?" unless entry
       token = entry.first.split('=')[1]
-      "#{@url}/servers/data_injection_payload/#{token}"
+      "#{api_url}/servers/data_injection_payload/#{token}"
     end
 
     def delete_server(name)
@@ -131,7 +95,7 @@ module RightApiHelper
       list_resources(:deployments, filter_by, filter_value)
     end
 
-    def list_clouds(filter_by, filter_value)
+    def list_clouds(filter_by=nil, filter_value=nil)
       list_resources(:clouds, filter_by, filter_value)
     end
 
@@ -195,14 +159,14 @@ module RightApiHelper
         raise "ERROR: Unable to find ServerTemplate with the name of '#{name}' found " unless server_template
       else
         # find ServerTemplate by id
-        server_template = @connection.server_templates.index(:id => id)
+        server_template = @client.server_templates.index(:id => id)
       end
 
       server_template
     end
 
     def create_deployment(name)
-      @connection.deployments.create(:deployment => { :name => name, :decription => "Created by the Vagrant"})
+      @client.deployments.create(:deployment => { :name => name, :decription => "Created by the Vagrant"})
     end
 
     def destroy_deployment(deployment)
@@ -260,7 +224,7 @@ module RightApiHelper
 
       # create server in deployment using specfied ST
       server =
-        @connection.servers.create({
+        @client.servers.create({
               :server => {
               :name => name,
               :decription => "Created by the right_provision_api", #TODO: pass this as a param
@@ -361,13 +325,13 @@ module RightApiHelper
       key = filter_key.to_s.delete("by_") # convert :by_name to "name"
       filter = {}
       filter = {:filter => ["#{key}==#{filter_value}"]} if filter_value
-      list = @connection.send(api_resource).index(filter)
+      list = @client.send(api_resource).index(filter)
       list
     end
 
     def index_resource(api_resource, index_key, index_value)
       raise ArgumentError.new("api_resource must be a symbol") unless api_resource.kind_of?(Symbol)
-      arry = @connection.send(api_resource).index(index_key => index_value)
+      arry = @client.send(api_resource).index(index_key => index_value)
       arry
     end
 
