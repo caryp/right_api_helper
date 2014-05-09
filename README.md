@@ -23,11 +23,11 @@ Or install it yourself as:
 
 Get started by creating a [right_api_client](https://github.com/rightscale/right_api_client) handle:
 
-    @client = RightApiHelper::Session.new.create_client_from_file("~/.right_api_client/login.yml")
+    @client = RightApiHelper::Session.new.create_client("someemail", "somepasswd", "someaccountid", "https://my.rightscale.com")
 
 or
 
-    @client = RightApiHelper.create_client_from_file("~/.right_api_client/login.yml")
+    @client = RightApiHelper::Session.new.create_client_from_file("~/.right_api_client/login.yml")
 
 ### Using a helper
 

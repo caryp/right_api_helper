@@ -1,4 +1,5 @@
 spec/cassettes/*
+.DS_Store
 *.gem
 *.rbc
 .bundle
