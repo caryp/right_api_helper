@@ -50,7 +50,8 @@ describe RightApiHelper::Deployments do
     end
   end
 
-  pending "adds an instance to a deployment" do
+  it "adds an instance to a deployment" do
+    pending("this feature not yet supported by RightScale API")
   end
 
 end

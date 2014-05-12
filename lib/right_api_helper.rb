@@ -20,6 +20,7 @@ require "yaml"
 
 require 'right_api_helper/version'
 require 'right_api_helper/base'
+require 'right_api_helper/cache'
 require 'right_api_helper/session'
 require 'right_api_helper/api15'
 require 'right_api_helper/deployments'

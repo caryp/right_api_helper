@@ -30,6 +30,8 @@ require 'rubygems'
 require 'thor'
 require 'right_api_helper'
 
+require 'pry'
+
 class OrganizeApp < Thor
 
   desc "preview FILE", "generate an organization preview and output to JSON file."
@@ -37,11 +39,13 @@ class OrganizeApp < Thor
   option :prefix
   option :name_regexps
   option :debug, :type => :boolean
+  option :clear_cache, :type => :boolean
   def preview(filename)
     # setup
     setup_logging(options[:debug])
     initialize_api_client
-    @log.info "Collecting tags for all instances..."
+    setup_cache_objects(options[:clear_cache])
+
     # organize
     result_hash =
       organize_by_tags(
@@ -74,6 +78,17 @@ class OrganizeApp < Thor
     @client ||= session.create_client_from_file("~/.right_api_client/login.yml")
   end
 
+  def setup_cache_objects(clear=false)
+    @cache_dir = File.join(".", "cache")
+    @instance_cache ||= RightApiHelper::Cache.new("instances", @cache_dir)
+    @tag_cache ||= RightApiHelper::Cache.new("tags", @cache_dir)
+    if clear
+      @instance_cache.clear ; @tag_cache.clear
+      FileUtils.rmdir(@cache_dir)
+    end
+    FileUtils.mkdir(@cache_dir) unless File.directory?(@cache_dir)
+  end
+
   def get_tag_array(option)
     array = []
     array = option.split(",") if option
@@ -98,13 +113,12 @@ class OrganizeApp < Thor
     @log.debug "ORGANIZE PARAMS: deployment_regexps: #{deployment_regexps} name_regexps: #{name_regexps}, prefix: #{prefix}"
     output_hash = {}
 
-    # query instance data
-    instances = instance_helper.get_unmanaged_instances
-    instances_by_href = instances.inject({}) {|new_hash, instance| new_hash[instance.href] = instance.name; new_hash}
-    @log.debug "instances_by_href: #{instances_by_href.inspect}"
+    # cached API queries for instances
+    instances_by_href = query_instances
 
-    # query tag data
+    # uncached tags query
     instance_hrefs = instances_by_href.keys
+    @log.info "Querying tags from RightScale API..."
     @log.debug "instance_hrefs: #{instance_hrefs.inspect}"
     tag_data = @client.tags.by_resource(:resource_hrefs => instance_hrefs)
 
@@ -130,6 +144,32 @@ class OrganizeApp < Thor
       deployments_hash["deployments"] << deployment_data
     end
     deployments_hash
+  end
+
+  # query instance data
+  #
+  # Use local cachefile to improve performance
+  #
+  def query_instances
+    instances_by_href = {}
+    if (instances_by_href = @instance_cache.get) == nil
+      @log.info "Querying instances from RightScale API (might take a few minutes)..."
+      instances = instance_helper.get_unmanaged_instances
+      instances_by_href = instances.inject({}) {|new_hash, instance| instance.show ; new_hash[instance.href] = existing_name(instance); new_hash}
+      @instance_cache.set(instances_by_href)
+    end
+    @log.debug "instances_by_href: #{instances_by_href.inspect}"
+    instances_by_href
+  end
+
+  def existing_name(instance)
+    if instance.respond_to?(:name)
+      instance.name
+    elsif instance.respond_to?(:resource_uid)
+      instance.resource_uid
+    else
+      "unknown"
+    end
   end
 
   def gather_relevant_tags(tag_regexps, tags, delimiter = '-')
