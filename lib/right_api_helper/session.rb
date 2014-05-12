@@ -19,7 +19,7 @@ module RightApiHelper
   class Session < Base
 
     def initialize
-      self.logger()
+      logger
     end
 
     # Create a right_api_client session
@@ -64,11 +64,12 @@ module RightApiHelper
     private
 
     def setup_client_logging
-      # right_api_client logs too much stuff, squelch it down a notch.
-      right_api_log = @log.dup
-      right_api_log.level = @log.level + 1
-
-      @client.log(right_api_log)
+      # right_api_client logs too much stuff, throw away unless in debug mode
+      if @log.level == Logger::DEBUG
+        @client.log(STDOUT)
+      else
+        @client.log("/dev/null")
+      end
     end
 
   end

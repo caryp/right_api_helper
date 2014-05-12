@@ -1,18 +1,23 @@
 {
   "deployments": [
     {
-      "name": "zensmartfeedpool-a-zook",
+      "name": "zensmartfeedpool-b-zookeeper",
       "children": [
         {
-          "href": "/api/clouds/3/instances/80J8V6NUU2TOM",
+          "href": "/api/clouds/3/instances/CFD3EJB1P9L5D",
           "type": "Instance",
-          "name": "i-d9050e86"
+          "name": "i-fb8d86a4"
         }
       ]
     },
     {
       "name": "zensmartfeedpool-a-zookeeper",
       "children": [
+        {
+          "href": "/api/clouds/3/instances/C40BA3BLJ77JF",
+          "type": "Instance",
+          "name": "i-858d86da"
+        },
         {
           "href": "/api/clouds/3/instances/42S13K03IDSDV",
           "type": "Instance",
@@ -22,21 +27,16 @@
           "href": "/api/clouds/3/instances/8BKCHD746OE69",
           "type": "Instance",
           "name": "i-b91912e6"
-        },
-        {
-          "href": "/api/clouds/3/instances/C40BA3BLJ77JF",
-          "type": "Instance",
-          "name": "i-858d86da"
         }
       ]
     },
     {
-      "name": "zensmartfeedpool-b-zookeeper",
+      "name": "zensmartfeedpool-a-zook",
       "children": [
         {
-          "href": "/api/clouds/3/instances/CFD3EJB1P9L5D",
+          "href": "/api/clouds/3/instances/80J8V6NUU2TOM",
           "type": "Instance",
-          "name": "i-fb8d86a4"
+          "name": "i-d9050e86"
         }
       ]
     }

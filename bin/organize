@@ -41,7 +41,7 @@ class OrganizeApp < Thor
     # setup
     setup_logging(options[:debug])
     initialize_api_client
-
+    @log.info "Collecting tags for all instances..."
     # organize
     result_hash =
       organize_by_tags(
@@ -68,16 +68,16 @@ class OrganizeApp < Thor
     @log.level = Logger::DEBUG if debug
   end
 
-  def get_tag_array(option)
-    array = []
-    array = option.split(",") if option
-    array
-  end
-
   def initialize_api_client
     session = RightApiHelper::Session.new
     session.logger(@log)
     @client ||= session.create_client_from_file("~/.right_api_client/login.yml")
+  end
+
+  def get_tag_array(option)
+    array = []
+    array = option.split(",") if option
+    array
   end
 
   def instance_helper
@@ -97,9 +97,15 @@ class OrganizeApp < Thor
   def organize_by_tags(deployment_regexps, name_regexps=[], prefix="")
     @log.debug "ORGANIZE PARAMS: deployment_regexps: #{deployment_regexps} name_regexps: #{name_regexps}, prefix: #{prefix}"
     output_hash = {}
+
+    # query instance data
     instances = instance_helper.get_unmanaged_instances
-    instances_by_href = instances.inject({}) {|new_hash, instance| new_hash[instance.href] = instance; new_hash}
+    instances_by_href = instances.inject({}) {|new_hash, instance| new_hash[instance.href] = instance.name; new_hash}
+    @log.debug "instances_by_href: #{instances_by_href.inspect}"
+
+    # query tag data
     instance_hrefs = instances_by_href.keys
+    @log.debug "instance_hrefs: #{instance_hrefs.inspect}"
     tag_data = @client.tags.by_resource(:resource_hrefs => instance_hrefs)
 
     tag_data.each do |tag|
@@ -111,7 +117,7 @@ class OrganizeApp < Thor
         new_name = gather_relevant_tags(name_regexps, tags) if name_regexps
 
         unless relevant_tags_key.empty?
-          instance_name = (new_name.nil? || new_name.empty?) ? instances_by_href[href].resource_uid : new_name
+          instance_name = (new_name.nil? || new_name.empty?) ? instances_by_href[href] : new_name
           instance_hash = {"href" => href, "type" => "Instance", "name" => instance_name}
           output_hash[relevant_tags_key] ||= {"name" => "#{prefix}#{relevant_tags_key}", "children" => []}
           output_hash[relevant_tags_key]["children"] << instance_hash

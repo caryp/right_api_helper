@@ -1,5 +1,8 @@
 # RightApiHelper
 
+[![Build Status](http://img.shields.io/travis/ecaryp/right_api_helper.svg)][travis]
+[![Coverage Status](https://img.shields.io/coveralls/caryp/right_api_helper.svg)](https://coveralls.io/r/caryp/right_api_helper)
+
 A collection of helper objects and methods that encapsulate commonly used idioms for [right_api_client](https://github.com/rightscale/right_api_client) users.
 
 ## Installation
