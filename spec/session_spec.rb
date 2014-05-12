@@ -21,6 +21,8 @@ describe RightApiHelper::Session do
 
   it "creates an client" do
     VCR.use_cassette('right_api_session') do
+      apiStub = double("RightApi::Client", :api_url => "http://foo.com", :log => "")
+      RightApi::Client.should_receive(:new).and_return(apiStub)
       session = RightApiHelper::Session.new
       session.should_receive(:setup_client_logging)
       session.logger(double("Logger"))
@@ -31,6 +33,8 @@ describe RightApiHelper::Session do
 
   it "creates an client from file" do
     VCR.use_cassette('right_api_session') do
+      apiStub = double("RightApi::Client", :api_url => "http://foo.com", :log => "")
+      RightApi::Client.should_receive(:new).and_return(apiStub)
       session = RightApiHelper::Session.new
       session.should_receive(:setup_client_logging)
       session.logger(double("Logger"))

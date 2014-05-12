@@ -54,7 +54,7 @@ You can also pass a logger object to the `right_api_client` gem. For example:
 
 ## TODO
 
-* Need to filter VCR output for `right_api_client_session` cassette to remove creds for mocked unit tests.
+* Need to further sanitize VCR output before including spec/cassettes dir.
 * break `lib/right_api_helper/api15.rb` apart into separate helpers?
 
 ## Contributing
