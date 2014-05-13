@@ -28,8 +28,8 @@ VCR.configure do |c|
   c.hook_into :webmock
   c.configure_rspec_metadata!
 
-  # Uncomment this to record new cassettes
-  #c.default_cassette_options = { :record => :all }
+  # Comment this to record new cassettes for fast unit testing
+  c.default_cassette_options = { :record => :all }
 
   # filer out authentication data
   login_info = YAML::load(File.open("#{ENV['HOME']}/.right_api_client/login.yml"))

@@ -57,6 +57,27 @@ You can also pass a logger object to the `right_api_client` gem. For example:
 * Need to further sanitize VCR output before including spec/cassettes dir.
 * break `lib/right_api_helper/api15.rb` apart into separate helpers?
 
+
+## Using Vagrant
+
+For local gem development using Vagrant, you must have Vagrant 1.2 or greater installed.  Please see the [vagrant documentation](http://docs.vagrantup.com/v2/) for instructions.  This was tested on Vagrant 1.4.3, so I would start with that.
+
+You will also need to install some gems and the berkshelf and omnibus vagrant plugins.
+Here are the commands:
+
+	$ bundle
+	$ vagrant plugin install vagrant-berkshelf
+	$ vagrant plugin install vagrant-omnibus
+	$ vagrant up
+
+Once your instance is launched and configured, ssh in and run the specs
+
+	$ vagrant ssh
+	> cd /vagrant
+	> bundle
+	> bundle exec rake spec
+
+
 ## Contributing
 
 1. Fork it ( https://github.com/caryp/right_api_helper/fork )
