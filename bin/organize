@@ -30,8 +30,6 @@ require 'rubygems'
 require 'thor'
 require 'right_api_helper'
 
-require 'pry'
-
 class OrganizeApp < Thor
 
   desc "preview FILE", "generate an organization preview and output to JSON file."
