@@ -43,7 +43,7 @@ module RightApiHelper
       ssh_key = nil
       if ssh_uuid
         # grab specific ssh key
-        sshkey = find_resource(:ssh_keys, :by_resource_uid, uuid)
+        sshkey = find_cloud_resource(cloud, :ssh_keys, :by_resource_uid, ssh_uuid)
       else
         # grab first key found
         keys = cloud.show.ssh_keys
@@ -78,11 +78,10 @@ module RightApiHelper
 
     def delete_server(name)
       server = find_server_by_name(name)
-      server.terminate
       begin
+        server.terminate
         server_wait_for_state(server, "terminated")
-      rescue Exception => e
-
+      rescue
       end
       server.destroy
     end
@@ -115,6 +114,10 @@ module RightApiHelper
       find_cloud_resource(cloud, :security_groups, :by_name, security_group_name)
     end
 
+    def find_security_group_by_id(cloud, security_group_uid)
+      find_cloud_resource(cloud, :security_groups, :by_resource_uid, security_group_uid)
+    end
+
     def find_server_by_name(name)
       find_resource(:servers, :by_name, name)
     end
@@ -144,7 +147,7 @@ module RightApiHelper
       end
 
       if name
-        @log.info "ServerTemplate name detected."
+        @log.debug "ServerTemplate name detected."
         # find ServerTemplate by name
         st_list = list_resources(:server_templates, :by_name, name)
         revisions = st_list.map { |st| st.revision }
@@ -159,7 +162,7 @@ module RightApiHelper
         server_template = st_list.select { |st| st.revision == latest_rev}.first
         raise RightScaleError, "ERROR: Unable to find ServerTemplate with the name of '#{name}' found " unless server_template
       else
-        @log.info "Looking up ServerTemplate by ID."
+        @log.debug "Looking up ServerTemplate by ID."
         # find ServerTemplate by id
         server_template = @client.server_templates.index(:id => id)
       end
@@ -348,7 +351,7 @@ module RightApiHelper
 
     def list_subresources(api_resource, subresource, filter_key, filter_value)
       raise ArgumentError.new("subresource must be a symbol") unless subresource.kind_of?(Symbol)
-      key = filter_key.to_s.delete("by_") # convert :by_name to "name"
+      key = filter_key.to_s.sub(/by_/,"") # convert :by_name to "name"
       filter = {}
       filter = {:filter => ["#{key}==#{filter_value}"]} if filter_value
       list = api_resource.show.send(subresource).index(filter)

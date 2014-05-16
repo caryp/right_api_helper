@@ -10,7 +10,7 @@ describe RightApiHelper::Provisioner do
     end
     VCR.use_cassette('right_api_general') do
       @helper = RightApiHelper::Provisioner.new(@right_api_client)
-      @logger = stub("Logger")
+      @logger = double("Logger")
       @helper.logger(@logger)
     end
   end

@@ -134,7 +134,8 @@ module RightApiHelper
         security_groups ||= ["default"]
         security_groups.each do |name|
           group = @api_shim.find_security_group_by_name(@cloud, name)
-          raise RightScaleError, "ERROR: cannot find an security group named: #{name}" unless group
+          group = @api_shim.find_security_group_by_id(@cloud, name) unless group
+          raise RightScaleError, "ERROR: cannot find an security group : #{name}" unless group
           @sec_groups << group
         end
       end
@@ -192,7 +193,7 @@ module RightApiHelper
 
         # setup any inputs
         begin
-          @client.set_server_inputs(@server, inputs) if inputs && ! inputs.empty?
+          @api_shim.set_server_inputs(@server, inputs) if inputs && ! inputs.empty?
         rescue Exception => e
           raise RightScaleError, "Problem setting inputs. \n #{e.message}\n\n"
         end
