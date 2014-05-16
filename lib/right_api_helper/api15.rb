@@ -144,20 +144,22 @@ module RightApiHelper
       end
 
       if name
+        @log.info "ServerTemplate name detected."
         # find ServerTemplate by name
         st_list = list_resources(:server_templates, :by_name, name)
         revisions = st_list.map { |st| st.revision }
 
         # check for duplicate revisions
         duplicates = (revisions.size != revisions.uniq.size)
-        raise "ERROR: Duplicate ServerTemplate with the name of '#{name}' detected " +
+        raise RightScaleError, "ERROR: Duplicate ServerTemplate with the name of '#{name}' detected " +
                   "in account -- there can be only one. Please fix via the RightScale dashboard and retry." if duplicates
 
         # always use latest revision
         latest_rev = revisions.sort.last
         server_template = st_list.select { |st| st.revision == latest_rev}.first
-        raise "ERROR: Unable to find ServerTemplate with the name of '#{name}' found " unless server_template
+        raise RightScaleError, "ERROR: Unable to find ServerTemplate with the name of '#{name}' found " unless server_template
       else
+        @log.info "Looking up ServerTemplate by ID."
         # find ServerTemplate by id
         server_template = @client.server_templates.index(:id => id)
       end

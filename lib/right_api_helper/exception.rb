@@ -15,20 +15,16 @@
 # limitations under the License.
 #
 
-require "right_api_client"
-require "yaml"
-
-require 'right_api_helper/version'
-require 'right_api_helper/exception'
-require 'right_api_helper/base'
-require 'right_api_helper/cache'
-require 'right_api_helper/session'
-require 'right_api_helper/api15'
-require 'right_api_helper/deployments'
-require 'right_api_helper/instances'
-require 'right_api_helper/scripts/deployments_creator'
-require 'right_api_helper/provisioner'
-
 module RightApiHelper
-  # Hey now!
+  class RightScaleError < StandardError
+  end
+
+  class MultipleMatchesFound < RightScaleError
+    def initialize(resource, key, value)
+      key = key.to_s.delete("by_") # remove the 'by_' prefix
+      msg = "More than one #{resource} with the #{key} of '#{value}'. " +
+            "Please resolve via the RightScale dashboard and retry."
+      super msg
+    end
+  end
 end

@@ -74,11 +74,11 @@ module RightApiHelper
     end
 
     def connection_url
-      raise "No server provisioned. No connection URL available." unless @server
+      raise RightScaleError, "No server provisioned. No connection URL available." unless @server
       unless @data_request_url
         user_data = @server.current_instance.show(:view => "full").user_data
         @data_request_url = @api_shim.data_request_url(user_data)
-        @logger.debug "Data Request URL: #{@data_request_url}"
+        @log.debug "Data Request URL: #{@data_request_url}"
       end
       @data_request_url
     end
@@ -100,8 +100,8 @@ module RightApiHelper
     #
     # @raise {RightApiProvisionException} if anything
     #         goes wrong
-    def provision(servertemplate,
-                  server_name = "default",
+    def provision(server_name = "default",
+                  server_template = nil,
                   cloud_name = "ec2",
                   deployment_name = "default",
                   inputs = nil,
@@ -122,30 +122,33 @@ module RightApiHelper
       # Verify ssh key uuid, if required by cloud
       if @api_shim.requires_ssh_keys?(@cloud)
         @ssh_key = @api_shim.find_ssh_key_by_uuid_or_first(@cloud, ssh_key_uuid)
-        raise "ERROR: cannot find an ssh_key named: #{ssh_key_uuid}" unless @ssh_key
+        raise RightScaleError, "ERROR: cannot find an ssh_key named: #{ssh_key_uuid}" unless @ssh_key
       end
 
       # Verify security group, if required by cloud
       if @api_shim.requires_security_groups?(@cloud)
         @sec_groups = []
+        if !security_groups.nil? && !security_groups.is_a?(Array)
+          raise RightScaleError, "security_groups must be an array.  You passed a #{security_groups.class}"
+        end
         security_groups ||= ["default"]
         security_groups.each do |name|
           group = @api_shim.find_security_group_by_name(@cloud, name)
-          raise "ERROR: cannot find an security group named: #{name}" unless group
+          raise RightScaleError, "ERROR: cannot find an security group named: #{name}" unless group
           @sec_groups << group
         end
       end
 
       # check for existing deployment and server in RightScale account
       @deployment = @api_shim.find_deployment_by_name(deployment_name)
-      @logger.info "Deployment '#{deployment_name}' #{@deployment ? "found." : "not found."}"
+      @log.info "Deployment '#{deployment_name}' #{@deployment ? "found." : "not found."}"
       @server = @api_shim.find_server_by_name(server_name) if @deployment
-      @logger.info "Server '#{server_name}' #{@server ? "found." : "not found."}"
+      @log.info "Server '#{server_name}' #{@server ? "found." : "not found."}"
 
       if @server
         # verify existing server is on the cloud we are requesting, if not fail.
         actual_cloud_name = @api_shim.server_cloud_name(@server)
-        raise "ERROR: the server is in the '#{actual_cloud_name}' cloud, " +
+        raise RightScaleError, "ERROR: the server is in the '#{actual_cloud_name}' cloud, " +
               "and not in the requested '#{cloud_name}' cloud.\n" +
               "Please delete the server or pick and new server name." if cloud_name != actual_cloud_name
       end
@@ -153,8 +156,8 @@ module RightApiHelper
       unless @deployment && @server
         # we need to create a server, can we find the servertemplate?
         begin
-          @servertemplate = @client.find_servertemplate(server_template)
-        rescue
+          @servertemplate = @api_shim.find_servertemplate(server_template)
+        rescue RightScaleError
           raise RightScaleError, "ERROR: cannot find ServerTemplate '#{server_template}'. Did you import it?\n" +
                 "Visit http://bit.ly/VnOiA7 for more info.\n\n"
         end
@@ -177,12 +180,12 @@ module RightApiHelper
       # create deployment and server as needed
       unless @deployment
         @deployment = @api_shim.create_deployment(deployment_name)
-        @logger.info "Created deployment."
+        @log.info "Created deployment."
       end
 
       unless @server
         @server = @api_shim.create_server(@deployment, @servertemplate, @mci, @cloud, server_name, @ssh_key, @sec_groups)
-        @logger.info "Created server."
+        @log.info "Created server."
       end
 
       unless @api_shim.is_provisioned?(@server)
@@ -195,7 +198,7 @@ module RightApiHelper
         end
 
         # launch server
-        @logger.info "Launching server..."
+        @log.info "Launching server..."
         @server = @api_shim.launch_server(@server, inputs)
         @api_shim.set_bad_states(BAD_STATES_UP)
         @api_shim.server_wait_for_state(@server, "booting", 30)
@@ -215,7 +218,7 @@ module RightApiHelper
     def server_info
       info = @api_shim.server_info(@server)
       while info.private_ip_addresses.empty?
-        @logger.info "Waiting for cloud to provide IP address..."
+        @log.info "Waiting for cloud to provide IP address..."
         sleep 30
         info = @api_shim.server_info(@server)
       end
